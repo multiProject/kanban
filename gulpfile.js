@@ -17,7 +17,7 @@ var base_url = './src/client/kanban/',
         scripts_dest: dest_url + 'js/',
         dev_enviroment: 'dev',
         prod_enviroment: 'prod',
-        less_style: 'assets/styles/*.less',
+        less_style: base_url + 'assets/styles/*.less',
         style_dest: base_url + 'style_css'
     };
 
@@ -116,6 +116,5 @@ function injectBowerFiles() {
  */
 function injectStyleLess() {
     gulp.src(paths.less_style)
-        .pipe(inject(gulp.src(styleCss(), {read: false}), {name: 'bower'}))
         .pipe(gulp.dest(paths.style_dest));
 }
