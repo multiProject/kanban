@@ -5,6 +5,7 @@ var gulp = require('gulp'),
     gulpif = require('gulp-if'),
     uglify = require('gulp-uglify')
     rename = require("gulp-rename");
+    styleCss = require('gulp-less');
 
 var base_url = './src/client/kanban/',
     dest_url = './dist/client/',
@@ -12,9 +13,12 @@ var base_url = './src/client/kanban/',
         index: base_url + 'index.html',
         scripts_origin: base_url + '**/*.js',
         scripts_spec: base_url + '**/*.spec.js',
+        dest: './dist/client/',
         scripts_dest: dest_url + 'js/',
         dev_enviroment: 'dev',
-        prod_enviroment: 'prod'
+        prod_enviroment: 'prod',
+        less_style: 'assets/styles/*.less',
+        style_dest: base_url + 'style_css'
     };
 
 gulp.task('build-dev', function() {
@@ -65,6 +69,8 @@ function generateBowerScript(isProdEnviroment) {
         .pipe(gulp.dest(paths.scripts_dest));
 }
 
+gulp.task('gulp-less', injectLess);
+
 /**
  * @function injectFiles
  * @description Inject all bower dependencies into index.html
@@ -83,5 +89,33 @@ function injectDevFiles() {
  * @description 
  */
 function injectProdFiles() {
-    
+
+}
+
+/* 
+ * @function injectLess
+ * @description Inject all the dependencies into css
+ */
+function injectLess() {
+    injectStyleLess();
+}
+
+/**
+ * @function injectBowerFiles
+ * @description 
+ */
+function injectBowerFiles() {
+    gulp.src(paths.index)
+        .pipe(inject(gulp.src(bowerFiles(), {read: false}), {name: 'bower'}))
+        .pipe(gulp.dest(paths.dest));
+}
+
+/**
+ * @function injectStyleLess
+ * @description 
+ */
+function injectStyleLess() {
+    gulp.src(paths.less_style)
+        .pipe(inject(gulp.src(styleCss(), {read: false}), {name: 'bower'}))
+        .pipe(gulp.dest(paths.style_dest));
 }
