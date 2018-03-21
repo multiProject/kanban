@@ -1,33 +1,87 @@
 var gulp = require('gulp'),
     bowerFiles = require('main-bower-files'),
-    inject = require('gulp-inject');
+    inject = require('gulp-inject'),
+    concat = require('gulp-concat'),
+    gulpif = require('gulp-if'),
+    uglify = require('gulp-uglify')
+    rename = require("gulp-rename");
 
 var base_url = './src/client/kanban/',
+    dest_url = './dist/client/',
     paths = {
         index: base_url + 'index.html',
-        dest: './dist/client/'
+        scripts_origin: base_url + '**/*.js',
+        scripts_spec: base_url + '**/*.spec.js',
+        scripts_dest: dest_url + 'js/',
+        dev_enviroment: 'dev',
+        prod_enviroment: 'prod'
     };
 
-gulp.task('default', function() {
-    console.log("Not implemented yet.")
+gulp.task('build-dev', function() {
+    injectDevFiles();
 });
 
-gulp.task('inject-dependencies', injectFiles)
+gulp.task('build-prod', function() {
+    generateFiles(paths.prod_enviroment);
+    injectProdFiles();
+});
+
+gulp.task('inject-dev-dependencies', injectDevFiles);
+gulp.task('generate-files-dev', generateFiles);
 
 /**
- * @function injectFiles
- * @description Inject all the dependencies into index.html
+ * @function generateFiles
+ * @description Generate all the files what will be injected to index.html
  */
-function injectFiles() {
-    injectBowerFiles();
+function generateFiles(enviroment) {
+    enviroment = enviroment === paths.prod_enviroment;
+    generateScript(enviroment);
+    generateBowerScript(enviroment);
 }
 
 /**
- * @function injectBowerFiles
+ * @function generateScript
+ * @description Concat and generate one script to be injected into index.html
+ */
+function generateScript(isProdEnviroment) {
+    return gulp.src(paths.scripts_origin)
+        .pipe(concat('index.js'))
+        .pipe(gulp.dest(paths.scripts_dest))
+        .pipe(gulpif(isProdEnviroment, uglify()))
+        .pipe(rename('index.min.js'))
+        .pipe(gulp.dest(paths.scripts_dest));
+}
+
+/**
+ * @function generateBowerScript
+ * @description Concat and generate one script from bower js to be injected into index.html
+ */
+function generateBowerScript(isProdEnviroment) {
+    return gulp.src(bowerFiles())
+        .pipe(concat('bower.js'))
+        .pipe(gulp.dest(paths.scripts_dest))
+        .pipe(gulpif(isProdEnviroment, uglify()))
+        .pipe(rename('bower.min.js'))
+        .pipe(gulp.dest(paths.scripts_dest));
+}
+
+/**
+ * @function injectFiles
+ * @description Inject all bower dependencies into index.html
+ */
+function injectDevFiles() {
+    return gulp.src(paths.index)
+        //Inject bower files
+        .pipe(inject(gulp.src(bowerFiles(), {read: false}), {name: 'bower'}))
+        //inject own files and exclude spec files
+        .pipe(inject(gulp.src([paths.scripts_origin, '!' + paths.scripts_spec], {read: false})))
+        .pipe(gulp.dest(dest_url));
+}
+
+/**
+ * @function injectProdFiles
  * @description 
  */
-function injectBowerFiles() {
-    gulp.src(paths.index)
-        .pipe(inject(gulp.src(bowerFiles(), {read: false}), {name: 'bower'}))
-        .pipe(gulp.dest(paths.dest));
+function injectProdFiles() {
+    
 }
