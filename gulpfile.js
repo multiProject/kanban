@@ -6,6 +6,10 @@ var gulp = require('gulp'),
     uglify = require('gulp-uglify')
     rename = require("gulp-rename");
     styleCss = require('gulp-less');
+    liveReload = require('gulp-livereload');
+    injectReload = require('gulp-inject-reload');
+    minify = require('gulp-minify'),
+    minifyCss = require('gulp-minify-css');   
 
 var base_url = './src/client/kanban/',
     dest_url = './dist/client/',
@@ -17,19 +21,29 @@ var base_url = './src/client/kanban/',
         scripts_dest: dest_url + 'js/',
         dev_enviroment: 'dev',
         prod_enviroment: 'prod',
+        indexDist: dest_url + 'index.html',
         less_style: base_url + 'assets/styles/*.less',
-        style_dest: base_url + 'style_css'
+        style_dest: dest_url + 'style_css'
     };
+
+gulp.task('watch', function() {
+    liveReload.listen();
+    gulp.watch(paths.indexDist, ['test-index']);
+    });    
+
+gulp.task('test-index', function() {
+    gulp.src(paths.indexDist)
+    .pipe(liveReload());
+});
 
 gulp.task('build-dev', function() {
     injectDevFiles();
 });
-
 gulp.task('build-prod', function() {
     generateFiles(paths.prod_enviroment);
     injectProdFiles();
 });
-
+gulp.task('gulp-less', injectLess);
 gulp.task('inject-dev-dependencies', injectDevFiles);
 gulp.task('generate-files-dev', generateFiles);
 
@@ -69,14 +83,13 @@ function generateBowerScript(isProdEnviroment) {
         .pipe(gulp.dest(paths.scripts_dest));
 }
 
-gulp.task('gulp-less', injectLess);
-
 /**
  * @function injectFiles
  * @description Inject all bower dependencies into index.html
  */
 function injectDevFiles() {
     return gulp.src(paths.index)
+        .pipe(injectReload())
         //Inject bower files
         .pipe(inject(gulp.src(bowerFiles(), {read: false}), {name: 'bower'}))
         //inject own files and exclude spec files
